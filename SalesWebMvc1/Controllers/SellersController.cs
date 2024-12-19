@@ -2,6 +2,7 @@
 using SalesWebMvc1.Models;
 using SalesWebMvc1.Models.ViewModels;
 using SalesWebMvc1.Services;
+using SalesWebMvc1.Services.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -101,10 +102,25 @@ namespace SalesWebMvc1.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(int id)
+        public IActionResult Edit(int id, Seller seller)
         {
-            _sellerService.Update(id);
-            return RedirectToAction(nameof(Index));
+            if (id != seller.Id)
+            {
+                return BadRequest();
+            }
+            try
+            {
+                _sellerService.Update(seller);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (NotFoundException)
+            {
+                return NotFound();
+            }
+            catch (DbConcurrencyException)
+            {
+                return BadRequest();
+            }
         }
     }
 }
